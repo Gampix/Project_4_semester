@@ -57,7 +57,7 @@ class Tank:
         and not game.pressed[pygame.K_RIGHT] and not game.pressed[pygame.K_LEFT]:
             pygame.draw.rect(game.screen, [150, 100, 0], [self.x, self.y + 30, 10, 20], 0)
         if game.pressed[pygame.K_LEFT] and not game.pressed[pygame.K_UP] \
-        and not game.pressed[pygame.K_RIGHT]:# and not game.pressed[pygame.K_DOWN]:
+        and not game.pressed[pygame.K_RIGHT]:
             pygame.draw.rect(game.screen, [150, 100, 0], [self.x - 40, self.y, 20, 10], 0)
         if game.pressed[pygame.K_UP]:
             pygame.draw.rect(game.screen, [150, 100, 0], [self.x, self.y - 40, 10, 20], 0)
@@ -67,7 +67,7 @@ class Bullet:
     def __init__(self, flag = 0, x1 = 100, y1 = 100, vx1 = 0, vy1 = 0):
         self.flag, self.x1, self.y1, self.vx1, self.vy1 = flag, x1, y1, vx1, vy1
 
-    def update(self, game):
+    def update(self, game, tank):
         """Update Player state"""
         if game.pressed[pygame.K_SPACE]:
             if game.pressed[pygame.K_LEFT]:
@@ -86,8 +86,8 @@ class Bullet:
         self.x1 += self.vx1 * game.delta
         self.y1 += self.vy1 * game.delta
 
-        #tank.x += tank.vx * game.delta
-        #tank.y += tank.vy * game.delta
+        tank.x += tank.vx * game.delta
+        tank.y += tank.vy * game.delta
 
 
         """Do not let Bullet get out of the Game window"""
@@ -166,7 +166,7 @@ class Game:
         self.pressed = pygame.key.get_pressed()
 
         self.player.update(self)
-        self.bullet.update(self)
+        self.bullet.update(self, tank)
 
     def render(self):
         """Render the scene"""
@@ -192,6 +192,7 @@ class Game:
                 self.event_handler(event)
             self.move()
             self.render()
+
         self.cleanup()
 
 if __name__ == "__main__":

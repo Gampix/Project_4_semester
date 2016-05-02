@@ -67,7 +67,7 @@ class Bullet:
     def __init__(self, flag = 0, x1 = 100, y1 = 100, vx1 = 0, vy1 = 0):
         self.flag, self.x1, self.y1, self.vx1, self.vy1 = flag, x1, y1, vx1, vy1
 
-    def update(self, game, tank):
+    def update(self, game):
         """Update Player state"""
         if game.pressed[pygame.K_SPACE]:
             if game.pressed[pygame.K_LEFT]:
@@ -85,9 +85,6 @@ class Bullet:
 
         self.x1 += self.vx1 * game.delta
         self.y1 += self.vy1 * game.delta
-
-        tank.x += tank.vx * game.delta
-        tank.y += tank.vy * game.delta
 
 
         """Do not let Bullet get out of the Game window"""
@@ -108,25 +105,28 @@ class Bullet:
                 self.vy1 = 0
             self.y1 = game.height + 10
 
-    def shot(self, game, tank):
+    def shot(self, game):
         """Draw bullet on the Game window"""
         if game.pressed[pygame.K_SPACE]:
-            self.x1, self.y1 = tank.x, tank.y
+            self.x1, self.y1 = game.player.x, game.player.y
             if game.pressed[pygame.K_RIGHT] or game.pressed[pygame.K_LEFT]:
-                pygame.draw.ellipse(game.screen, [200, 200, 200],[self.x1, self.y1, 20, 10], 0)
+                pygame.draw.ellipse(game.screen, [200, 200, 200], [self.x1, self.y1, 20, 10], 0)
                 self.flag = 1
             if game.pressed[pygame.K_UP] or game.pressed[pygame.K_DOWN]:
-                pygame.draw.ellipse(game.screen, [200, 200, 200],[self.x1, self.y1, 10, 20], 0)
+                pygame.draw.ellipse(game.screen, [200, 200, 200], [self.x1, self.y1, 10, 20], 0)
                 self.flag = 0
             if (game.pressed[pygame.K_UP] or game.pressed[pygame.K_DOWN]) and \
                 (game.pressed[pygame.K_RIGHT] or game.pressed[pygame.K_LEFT]):
-                pygame.draw.ellipse(game.screen, [150, 75, 0],[self.x1, self.y1, 20, 10], 0)
+                pygame.draw.ellipse(game.screen, [150, 75, 0], [self.x1, self.y1, 20, 10], 0)
         if self.flag == 1:
-            pygame.draw.ellipse(game.screen, [200, 200, 200],[self.x1, self.y1, 20, 10], 0)
+            pygame.draw.ellipse(game.screen, [200, 200, 200], [self.x1, self.y1, 20, 10], 0)
         if self.flag == 0:
-            pygame.draw.ellipse(game.screen, [200, 200, 200],[self.x1, self.y1, 10, 20], 0)
+            pygame.draw.ellipse(game.screen, [200, 200, 200], [self.x1, self.y1, 10, 20], 0)
 
+        #if (self.x1 != game.player.x) or (self.y1 != game.player.y):
 
+#class Hard_wall:
+    #def
 class Game:
     def tick(self):
         """Return time in seconds since previous call
@@ -150,7 +150,7 @@ class Game:
         self.bullet = Bullet()
         self.ar = pygame.PixelArray(self.screen)
 
-    def event_handler(self, event):
+    def event_handler(self, event, game):
         """Handling one pygame event"""
         if event.type == pygame.QUIT:
             # close window event
@@ -159,21 +159,29 @@ class Game:
             # keyboard event on press ESC
             if event.key == pygame.K_ESCAPE:
                 self.exit()
+        #if event.type == pygame.KEYDOWN:
+            #if event.key == pygame.K_SPACE:
+                #self.bullet.x1 += 10 * game.delta
+                #self.bullet.y1 += 10 * game.delta
+                #game.bullet.x1, game.bullet.y1 = game.player.x, game.player.y
+
+
+
 
     def move(self):
         """Here game objects update their positions"""
         self.tick()
         self.pressed = pygame.key.get_pressed()
-
         self.player.update(self)
-        self.bullet.update(self, tank)
+        self.bullet.update(self)
 
     def render(self):
         """Render the scene"""
         self.screen.fill((0, 0, 0))
         self.player.render(self)
-        self.bullet.shot(self, tank)
+        self.bullet.shot(self)
         self.ar[int(self.player.x/10.0),int(self.player.y/10.0)] = (200,200,200)
+        self.ar[int(self.bullet.x1/10.0),int(self.bullet.y1/10.0)] = (200,200,200)
         pygame.display.flip()
 
     def exit(self):
@@ -189,7 +197,7 @@ class Game:
         while(self._running):
             # get all pygame events from queue
             for event in pygame.event.get():
-                self.event_handler(event)
+                self.event_handler(event, game)
             self.move()
             self.render()
 
@@ -197,5 +205,4 @@ class Game:
 
 if __name__ == "__main__":
     game = Game()
-    tank = Tank()
     game.execute()

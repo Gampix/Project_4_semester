@@ -2,11 +2,11 @@ import math
 import pygame
 
 class Tank:
-    def __init__(self, x = 100, y = 100, vx = 0, vy = 0, a = 500, b = 20):
+    def __init__(self, x = 100, y = 100, vx = 0, vy = 0, a = 500, b = 20, flag = 2, flag1 = 0):
         """Constructor of Tank class"""
         """self.a - acceleration"""
         """self.b - site of square"""
-        self.x, self.y, self.vx, self.vy, self.a, self.b = x, y, vx, vy, a, b
+        self.x, self.y, self.vx, self.vy, self.a, self.b, self.flag, self.flag1 = x, y, vx, vy, a, b, flag, flag1
 
     def update(self, game):
         """Update Player state"""
@@ -50,17 +50,46 @@ class Tank:
     def render(self, game):
         """Draw Player on the Game window"""
         pygame.draw.rect(game.screen, [150, 75, 0], [self.x - self.b, self.y - self.b, 50, 50], 0)
-        if game.pressed[pygame.K_RIGHT] and not game.pressed[pygame.K_DOWN] \
-        and not game.pressed[pygame.K_LEFT] and not game.pressed[pygame.K_UP]:
-            pygame.draw.rect(game.screen, [150, 100, 0], [self.x + 30, self.y, 20, 10], 0)
-        if game.pressed[pygame.K_DOWN] and not game.pressed[pygame.K_UP] \
-        and not game.pressed[pygame.K_RIGHT] and not game.pressed[pygame.K_LEFT]:
-            pygame.draw.rect(game.screen, [150, 100, 0], [self.x, self.y + 30, 10, 20], 0)
-        if game.pressed[pygame.K_LEFT] and not game.pressed[pygame.K_UP] \
-        and not game.pressed[pygame.K_RIGHT]:
-            pygame.draw.rect(game.screen, [150, 100, 0], [self.x - 40, self.y, 20, 10], 0)
-        if game.pressed[pygame.K_UP]:
+        if game.pressed[pygame.K_UP] and not game.pressed[pygame.K_DOWN] and not game.pressed[pygame.K_LEFT] and not game.pressed[pygame.K_RIGHT]:
+            self.flag = 1
+        if self.flag == 1:
             pygame.draw.rect(game.screen, [150, 100, 0], [self.x, self.y - 40, 10, 20], 0)
+        if game.pressed[pygame.K_RIGHT] and not game.pressed[pygame.K_DOWN] and not game.pressed[pygame.K_LEFT] and not game.pressed[pygame.K_UP]:
+            self.flag = 2
+        if self.flag == 2:
+            pygame.draw.rect(game.screen, [150, 100, 0], [self.x + 30, self.y, 20, 10], 0)
+        if game.pressed[pygame.K_LEFT] and not game.pressed[pygame.K_DOWN] and not game.pressed[pygame.K_UP] and not game.pressed[pygame.K_RIGHT]:
+            self.flag = 4
+        if self.flag == 4:
+            pygame.draw.rect(game.screen, [150, 100, 0], [self.x - 40, self.y, 20, 10], 0)
+        if game.pressed[pygame.K_DOWN] and not game.pressed[pygame.K_LEFT] and not game.pressed[pygame.K_RIGHT] and not game.pressed[pygame.K_UP]:
+            self.flag = 3
+        if self.flag == 3:
+            pygame.draw.rect(game.screen, [150, 100, 0], [self.x, self.y + 30, 10, 20], 0)
+
+    def shot(self, game):
+        """Draw bullet on the Game window"""
+        if game.pressed[pygame.K_SPACE]:
+            if self.flag == 1 or self.flag == 3:
+                #game.bullet.x1, game.bullet.y1 = self.x, self.y
+                #pygame.draw.ellipse(game.screen, [200, 200, 200], [game.bullet.x1, game.bullet.y1 - 5, 10, 20], 0)
+                self.flag1 = 1
+            if self.flag == 2 or self.flag == 4:
+                #game.bullet.x1, game.bullet.y1 = self.x, self.y
+                #pygame.draw.ellipse(game.screen, [200, 200, 200], [game.bullet.x1 - 5, game.bullet.y1, 20, 10], 0)
+                self.flag1 = 2
+        else:
+            game.bullet.x1, game.bullet.y1 = self.x, self.y
+        #if game.pressed[pygame.K_SPACE]:
+        if self.flag1 == 1:
+                pygame.draw.ellipse(game.screen, [200, 200, 200], [game.bullet.x1, game.bullet.y1 - 5, 10, 20], 0)
+        if self.flag1 == 2:
+                pygame.draw.ellipse(game.screen, [200, 200, 200], [game.bullet.x1 - 5, game.bullet.y1, 20, 10], 0)
+
+        if game.delta % 2 == 0:
+            game.bullet.x1, game.bullet.y1 = self.x, self.y
+        #if game.bullet.x1 == -20 or game.bullet.y1 == -20 or game.bullet.x1 == game.width + 10 or game.bullet.y1 == game.height + 10:
+        #        game.bullet.x1, game.bullet.y1 = self.x, self.y
 
 
 class Bullet:
@@ -69,17 +98,16 @@ class Bullet:
 
     def update(self, game):
         """Update Player state"""
-        if game.pressed[pygame.K_SPACE]:
-            if game.pressed[pygame.K_LEFT]:
+        if game.player.flag == 4:
                 self.vx1 = -1000
                 self.vy1 = 0
-            if game.pressed[pygame.K_RIGHT]:
+        if game.player.flag == 2:
                 self.vx1 = 1000
                 self.vy1 = 0
-            if game.pressed[pygame.K_UP]:
+        if game.player.flag == 1:
                 self.vy1 = -1000
                 self.vx1 = 0
-            if game.pressed[pygame.K_DOWN]:
+        if game.player.flag == 3:
                 self.vy1 = 1000
                 self.vx1 = 0
 
@@ -105,26 +133,22 @@ class Bullet:
                 self.vy1 = 0
             self.y1 = game.height + 10
 
-    def shot(self, game):
+'''    def shot(self, game):
         """Draw bullet on the Game window"""
         if game.pressed[pygame.K_SPACE]:
-            self.x1, self.y1 = game.player.x, game.player.y
-            if game.pressed[pygame.K_RIGHT] or game.pressed[pygame.K_LEFT]:
-                pygame.draw.ellipse(game.screen, [200, 200, 200], [self.x1, self.y1, 20, 10], 0)
+            if game.player.flag == 1 or game.player.flag == 3:
+             #   pygame.draw.ellipse(game.screen, [200, 200, 200], [self.x1, self.y1, 20, 10], 0)
                 self.flag = 1
-            if game.pressed[pygame.K_UP] or game.pressed[pygame.K_DOWN]:
-                pygame.draw.ellipse(game.screen, [200, 200, 200], [self.x1, self.y1, 10, 20], 0)
-                self.flag = 0
-            if (game.pressed[pygame.K_UP] or game.pressed[pygame.K_DOWN]) and \
-                (game.pressed[pygame.K_RIGHT] or game.pressed[pygame.K_LEFT]):
-                pygame.draw.ellipse(game.screen, [150, 75, 0], [self.x1, self.y1, 20, 10], 0)
+            if game.player.flag == 2 or game.player.flag == 4:
+            #    pygame.draw.ellipse(game.screen, [200, 200, 200], [self.x1, self.y1, 10, 20], 0)
+                self.flag = 2
+          #  if game.player.flag == 3:
+           #     pygame.draw.ellipse(game.screen, [150, 75, 0], [self.x1, self.y1, 20, 10], 0)
         if self.flag == 1:
             pygame.draw.ellipse(game.screen, [200, 200, 200], [self.x1, self.y1, 20, 10], 0)
-        if self.flag == 0:
+        if self.flag == 2:
             pygame.draw.ellipse(game.screen, [200, 200, 200], [self.x1, self.y1, 10, 20], 0)
-
-        #if (self.x1 != game.player.x) or (self.y1 != game.player.y):
-
+'''
 #class Hard_wall:
     #def
 class Game:
@@ -148,7 +172,9 @@ class Game:
         self.tool = 'run'
         self.player = Tank()
         self.bullet = Bullet()
-        self.ar = pygame.PixelArray(self.screen)
+        #self.ar = pygame.PixelArray(self.screen)
+        self.objects = [self.player]
+        self.objects.append(Bullet())
 
     def event_handler(self, event, game):
         """Handling one pygame event"""
@@ -179,9 +205,10 @@ class Game:
         """Render the scene"""
         self.screen.fill((0, 0, 0))
         self.player.render(self)
-        self.bullet.shot(self)
-        self.ar[int(self.player.x/10.0),int(self.player.y/10.0)] = (200,200,200)
-        self.ar[int(self.bullet.x1/10.0),int(self.bullet.y1/10.0)] = (200,200,200)
+        self.player.shot(self)
+        #self.bullet.shot(self)
+       # self.ar[int(self.player.x/10.0),int(self.player.y/10.0)] = (200,200,200)
+       # self.ar[int(self.bullet.x1/10.0),int(self.bullet.y1/10.0)] = (200,200,200)
         pygame.display.flip()
 
     def exit(self):

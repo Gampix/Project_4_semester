@@ -1,235 +1,274 @@
-import math
+# Pygame template - skeleton for a new pygame project
 import pygame
+import random
+import os
+from math import fabs
+from math import sqrt
 
-class Tank:
-    def __init__(self, x = 100, y = 100, vx = 0, vy = 0, a = 500, b = 20, flag = 2, flag1 = 0):
-        """Constructor of Tank class"""
-        """self.a - acceleration"""
-        """self.b - site of square"""
-        self.x, self.y, self.vx, self.vy, self.a, self.b, self.flag, self.flag1 = x, y, vx, vy, a, b, flag, flag1
+width = 800
+height = 600
+FPS = 50
 
-    def update(self, game):
+# define colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 100, 0)
+BLUE = (0, 0, 255)
+BROWN = (139, 69, 19)
+
+def trap(x1, y1, x2, y2, x3, y3):
+        if (x2 < x1 < x3) and (y2 < y1 < y3):
+            x1 = x3 - x2
+            y1 = y3 - y2
+            return True
+
+class Player(pygame.sprite.Sprite):
+    # sprite for the Player
+    def __init__(self, color, center, up = 0, right = 0, down = 0, left = 0, flag = 1):
+        pygame.sprite.Sprite.__init__(self)
+        self.vx, self.vy = vx, vy = 0, 0
+        self.side = 40
+        self.image = pygame.Surface((self.side, self.side))
+        self.image.fill(color)
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.flag = flag
+        self.up = up
+        self.right = right
+        self.down = down
+        self.left = left
+        self.color = color
+        self.shield = 100
+
+    def update(self):
         """Update Player state"""
-        if game.pressed[pygame.K_LEFT]:
-            self.vx -= game.delta * self.a
+        pressed = pygame.key.get_pressed()
+        self.vx, self.vy = 0, 0
+        if pressed[self.left] and not pressed[self.down] and not pressed[self.up] and not pressed[self.right]:
+            self.vx = -1
             self.vy = 0
-        if game.pressed[pygame.K_RIGHT]:
-            self.vx += game.delta * self.a
+        if pressed[self.right] and not pressed[self.down] and not pressed[self.left] and not pressed[self.up]:
+            self.vx = 1
             self.vy = 0
-        if game.pressed[pygame.K_UP]:
-            self.vy -= game.delta * self.a
+        if pressed[self.up] and not pressed[self.down] and not pressed[self.left] and not pressed[self.right]:
+            self.vy = -1
             self.vx = 0
-        if game.pressed[pygame.K_DOWN]:
-            self.vy += game.delta * self.a
+        if pressed[self.down] and not pressed[self.left] and not pressed[self.right] and not pressed[self.up]:
+            self.vy = 1
             self.vx = 0
 
-        self.vx -= game.delta * self.vx
-        self.vy -= game.delta * self.vy
-
-        self.x += self.vx * game.delta
-        self.y += self.vy * game.delta
+        self.rect.x += self.vx
+        self.rect.y += self.vy
 
         """Do not let Tank get out of the Game window"""
-        if self.x < self.b:
-            if self.vx < 0:
-                self.vx = 0
-            self.x = self.b
-        if self.y < self.b:
-            if self.vy < 0:
-                self.vy = 0
-            self.y = self.b
-        if self.x > game.width - self.b:
-            if self.vx > 0:
-                self.vx = 0
-            self.x = game.width - self.b
-        if self.y > game.height - self.b:
-            if self.vy > 0:
-                self.vy = 0
-            self.y = game.height - self.b
-
-    def render(self, game):
-        """Draw Player on the Game window"""
-        pygame.draw.rect(game.screen, [150, 75, 0], [self.x - self.b, self.y - self.b, 50, 50], 0)
-        if game.pressed[pygame.K_UP] and not game.pressed[pygame.K_DOWN] and not game.pressed[pygame.K_LEFT] and not game.pressed[pygame.K_RIGHT]:
-            self.flag = 1
-        if self.flag == 1:
-            pygame.draw.rect(game.screen, [150, 100, 0], [self.x, self.y - 40, 10, 20], 0)
-        if game.pressed[pygame.K_RIGHT] and not game.pressed[pygame.K_DOWN] and not game.pressed[pygame.K_LEFT] and not game.pressed[pygame.K_UP]:
-            self.flag = 2
-        if self.flag == 2:
-            pygame.draw.rect(game.screen, [150, 100, 0], [self.x + 30, self.y, 20, 10], 0)
-        if game.pressed[pygame.K_LEFT] and not game.pressed[pygame.K_DOWN] and not game.pressed[pygame.K_UP] and not game.pressed[pygame.K_RIGHT]:
-            self.flag = 4
-        if self.flag == 4:
-            pygame.draw.rect(game.screen, [150, 100, 0], [self.x - 40, self.y, 20, 10], 0)
-        if game.pressed[pygame.K_DOWN] and not game.pressed[pygame.K_LEFT] and not game.pressed[pygame.K_RIGHT] and not game.pressed[pygame.K_UP]:
-            self.flag = 3
-        if self.flag == 3:
-            pygame.draw.rect(game.screen, [150, 100, 0], [self.x, self.y + 30, 10, 20], 0)
-
-    def shot(self, game):
-        """Draw bullet on the Game window"""
-        if game.pressed[pygame.K_SPACE]:
-            if self.flag == 1 or self.flag == 3:
-                #game.bullet.x1, game.bullet.y1 = self.x, self.y
-                #pygame.draw.ellipse(game.screen, [200, 200, 200], [game.bullet.x1, game.bullet.y1 - 5, 10, 20], 0)
-                self.flag1 = 1
-            if self.flag == 2 or self.flag == 4:
-                #game.bullet.x1, game.bullet.y1 = self.x, self.y
-                #pygame.draw.ellipse(game.screen, [200, 200, 200], [game.bullet.x1 - 5, game.bullet.y1, 20, 10], 0)
-                self.flag1 = 2
-        else:
-            game.bullet.x1, game.bullet.y1 = self.x, self.y
-        #if game.pressed[pygame.K_SPACE]:
-        if self.flag1 == 1:
-                pygame.draw.ellipse(game.screen, [200, 200, 200], [game.bullet.x1, game.bullet.y1 - 5, 10, 20], 0)
-        if self.flag1 == 2:
-                pygame.draw.ellipse(game.screen, [200, 200, 200], [game.bullet.x1 - 5, game.bullet.y1, 20, 10], 0)
-
-        if game.delta % 2 == 0:
-            game.bullet.x1, game.bullet.y1 = self.x, self.y
-        #if game.bullet.x1 == -20 or game.bullet.y1 == -20 or game.bullet.x1 == game.width + 10 or game.bullet.y1 == game.height + 10:
-        #        game.bullet.x1, game.bullet.y1 = self.x, self.y
-
-
-class Bullet:
-    def __init__(self, flag = 0, x1 = 100, y1 = 100, vx1 = 0, vy1 = 0):
-        self.flag, self.x1, self.y1, self.vx1, self.vy1 = flag, x1, y1, vx1, vy1
-
-    def update(self, game):
-        """Update Player state"""
-        if game.player.flag == 4:
-                self.vx1 = -1000
-                self.vy1 = 0
-        if game.player.flag == 2:
-                self.vx1 = 1000
-                self.vy1 = 0
-        if game.player.flag == 1:
-                self.vy1 = -1000
-                self.vx1 = 0
-        if game.player.flag == 3:
-                self.vy1 = 1000
-                self.vx1 = 0
-
-        self.x1 += self.vx1 * game.delta
-        self.y1 += self.vy1 * game.delta
-
-
-        """Do not let Bullet get out of the Game window"""
-        if self.x1 < -20:
-            if self.vx1 < 0:
-                self.vx1 = 0
-            self.x1 = -20
-        if self.y1 < -20:
-            if self.vy1 < 0:
-                self.vy1 = 0
-            self.y1 = -20
-        if self.x1 > game.width + 10:
-            if self.vx1 > 0:
-                self.vx1 = 0
-            self.x1 = game.width + 10
-        if self.y1 > game.height + 10:
-            if self.vy1 > 0:
-                self.vy1 = 0
-            self.y1 = game.height + 10
-
-'''    def shot(self, game):
-        """Draw bullet on the Game window"""
-        if game.pressed[pygame.K_SPACE]:
-            if game.player.flag == 1 or game.player.flag == 3:
-             #   pygame.draw.ellipse(game.screen, [200, 200, 200], [self.x1, self.y1, 20, 10], 0)
+        if self.rect.left < 0:
+            self.rect.left = 0
+        if self.rect.top < 0:
+            self.rect.top = 0
+        if self.rect.right > width:
+            self.rect.right = width
+        if self.rect.bottom > height:
+            self.rect.bottom = height
+            
+        if self.flag != 0:
+            if pressed[self.up] and not pressed[self.down] and not pressed[self.left] and not pressed[self.right]:
                 self.flag = 1
-            if game.player.flag == 2 or game.player.flag == 4:
-            #    pygame.draw.ellipse(game.screen, [200, 200, 200], [self.x1, self.y1, 10, 20], 0)
+            if self.flag == 1:
+                pygame.draw.rect(screen, [150, 100, 0], [self.rect.left + self.side / 2 - 4, self.rect.top - 15, 8, 15], 0)
+            if pressed[self.right] and not pressed[self.down] and not pressed[self.left] and not pressed[self.up]:
                 self.flag = 2
-          #  if game.player.flag == 3:
-           #     pygame.draw.ellipse(game.screen, [150, 75, 0], [self.x1, self.y1, 20, 10], 0)
-        if self.flag == 1:
-            pygame.draw.ellipse(game.screen, [200, 200, 200], [self.x1, self.y1, 20, 10], 0)
-        if self.flag == 2:
-            pygame.draw.ellipse(game.screen, [200, 200, 200], [self.x1, self.y1, 10, 20], 0)
-'''
-#class Hard_wall:
-    #def
-class Game:
-    def tick(self):
-        """Return time in seconds since previous call
-        and limit speed of the game to 50 fps"""
-        self.delta = self.clock.tick(50) / 1000.0
+            if self.flag == 2:
+                pygame.draw.rect(screen, [150, 100, 0], [self.rect.right, self.rect.top + self.side / 2 - 4, 15, 8], 0)
+            if pressed[self.left] and not pressed[self.down] and not pressed[self.up] and not pressed[self.right]:
+                self.flag = 4
+            if self.flag == 4:
+                pygame.draw.rect(screen, [150, 100, 0], [self.rect.left - 15, self.rect.top + self.side / 2 - 4, 15, 8], 0)
+            if pressed[self.down] and not pressed[self.left] and not pressed[self.right] and not pressed[self.up]:
+                self.flag = 3
+            if self.flag == 3:
+                pygame.draw.rect(screen, [150, 100, 0], [self.rect.left + self.side / 2 - 4, self.rect.bottom, 8, 15], 0)
 
-    def __init__(self):
-        """Constructor of the Game"""
-        self._running = True
-        self.size = self.width, self.height = 640, 400
-        # create main display - 640x400 window
-        # try to use hardware acceleration
-        self.screen = pygame.display.set_mode(self.size, pygame.HWSURFACE)
-        # set window caption
-        pygame.display.set_caption('TANKS')
-        # get object to help track time
-        self.clock = pygame.time.Clock()
-        # set default tool
-        self.tool = 'run'
-        self.player = Tank()
-        self.bullet = Bullet()
-        #self.ar = pygame.PixelArray(self.screen)
-        self.objects = [self.player]
-        self.objects.append(Bullet())
+    def hurt(self, Player):
+        if Player.flag != 0:
+            all_sprites.add(Player)
+            if pygame.sprite.spritecollide(Player, bullets, True):
+                Player.shield -= 20
+            print Player.shield
+            if Player.shield <= 0:
+                all_sprites.remove(Player)
+                Player.flag = 0
 
-    def event_handler(self, event, game):
-        """Handling one pygame event"""
+    def shot(self, Player):
+        if Player.flag != 0:
+            if self.flag == 1:
+                bullet = Bullet(self.rect.centerx, self.rect.top, Player)
+            if self.flag == 2:
+                bullet = Bullet(self.rect.right, self.rect.centery, Player)
+            if self.flag == 3:
+                bullet = Bullet(self.rect.centerx, self.rect.bottom, Player)
+            if self.flag == 4:
+                bullet = Bullet(self.rect.left, self.rect.centery, Player)
+            all_sprites.add(bullet)
+            bullets.add(bullet)
+            pygame.sprite.spritecollide(bullet, players, True)
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y, player):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((10, 10))
+        self.image.fill(WHITE)
+        self.rect = self.image.get_rect()
+        self.player = player
+
+        if self.player.flag == 1:
+            self.rect.bottom = y
+            self.rect.centerx = x
+        if self.player.flag == 2:
+            self.rect.centery = y
+            self.rect.left = x
+        if self.player.flag == 3:
+            self.rect.top = y
+            self.rect.centerx = x
+        if self.player.flag == 4:
+            self.rect.centery = y
+            self.rect.right = x
+
+        self.v = 10
+        self.flag1 = 0
+        self.epsilon = 4
+
+    def update(self):
+        if self.rect.centerx == self.player.rect.centerx:
+            if fabs(self.rect.bottom - self.player.rect.top) < self.epsilon:
+                self.flag1 = 1
+            if fabs(self.rect.top - self.player.rect.bottom) < self.epsilon:
+                self.flag1 = 3
+        if self.rect.centery == self.player.rect.centery:
+            if fabs(self.rect.left - self.player.rect.right) < self.epsilon:
+                self.flag1 = 2
+            if fabs(self.rect.right - self.player.rect.left) < self.epsilon:
+                self.flag1 = 4
+
+        if self.flag1 == 1:
+            self.rect.y -= self.v
+        if self.rect.bottom < 0:
+            self.kill()
+        if self.flag1 == 2:
+            self.rect.x += self.v
+        if self.rect.left > width:
+            self.kill()
+        if self.flag1 == 3:
+            self.rect.y += self.v
+        if self.rect.top > height:
+            self.kill()
+        if self.flag1 == 4:
+            self.rect.x -= self.v
+        if self.rect.right < 0:
+            self.kill()
+
+class Wall(pygame.sprite.Sprite):
+    def __init__(self, x, y, sidex, sidey):
+        pygame.sprite.Sprite.__init__(self)
+        self.sidex = sidex
+        self.sidey = sidey
+        self.delta = 1
+        self.image = pygame.Surface((self.sidex, self.sidey))
+        self.image.fill((250, 0, 0))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.epsilon = 1
+
+    def block(self):
+        w11 = Wall(self.rect.x, self.rect.y)
+        w12 = Wall(self.rect.x + self.side + self.delta, self.rect.y)
+        w21 = Wall(self.rect.x, self.rect.y + self.side + self.delta)
+        w22 = Wall(self.rect.x + self.side + self.delta, self.rect.y + self.side + self.delta)
+        all_sprites.add(w11)
+        all_sprites.add(w12)
+        all_sprites.add(w21)
+        all_sprites.add(w22)
+
+    def stop(self, Wall, Player):
+        if Player.flag != 0:
+            if (Player.rect.bottom > Wall.rect.top) and (Player.rect.top < Wall.rect.bottom):
+                if (Wall.rect.right > Player.rect.left) and (Player.rect.right > Wall.rect.left):
+                    if Wall.rect.left < Player.rect.right < Wall.rect.right and Player.flag == 2:
+                        Player.rect.right = Wall.rect.left
+                    if Wall.rect.left < Player.rect.left < Wall.rect.right and Player.flag == 4:
+                        Player.rect.left = Wall.rect.right
+                    if Wall.rect.top < Player.rect.bottom < Wall.rect.bottom and Player.flag == 3:
+                        Player.rect.bottom = Wall.rect.top
+                    if Wall.rect.top < Player.rect.top < Wall.rect.bottom and Player.flag == 1:
+                        Player.rect.top = Wall.rect.bottom
+            pygame.sprite.spritecollide(Wall, bullets, True)
+            pygame.sprite.spritecollide(Player, bullets, True)
+
+# initialize pygame and create window
+pygame.init()
+pygame.mixer.init()
+screen = pygame.display.set_mode((width, height))
+pygame.display.set_caption("TANKS")
+clock = pygame.time.Clock()
+
+all_sprites = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
+players = pygame.sprite.Group()
+
+w1 = Wall(550, 150, 50, 400)
+w2 = Wall(100, 50, 600, 50)
+w3 = Wall(200, 150, 50, 400)
+all_sprites.add(w1)
+all_sprites.add(w2)
+all_sprites.add(w3)
+
+player = Player(BROWN, (60, 60), pygame.K_UP, pygame.K_RIGHT, pygame.K_DOWN, pygame.K_LEFT)
+player1 = Player(GREEN, (740, 540), pygame.K_w, pygame.K_d, pygame.K_s, pygame.K_a)
+
+#w1.block()
+#w2.block()
+#w3.block()
+#w4.block()
+
+# Game loop
+running = True
+while running:
+    # keep loop running at the right speed
+    clock.tick(FPS)
+    # Process input (events)
+    for event in pygame.event.get():
+        # check for closing window
         if event.type == pygame.QUIT:
-            # close window event
-            self.exit()
+            running = False
         elif event.type == pygame.KEYDOWN:
-            # keyboard event on press ESC
-            if event.key == pygame.K_ESCAPE:
-                self.exit()
-        #if event.type == pygame.KEYDOWN:
-            #if event.key == pygame.K_SPACE:
-                #self.bullet.x1 += 10 * game.delta
-                #self.bullet.y1 += 10 * game.delta
-                #game.bullet.x1, game.bullet.y1 = game.player.x, game.player.y
+            if event.key == pygame.K_L:
+                player.shot(player)
+            if event.key == pygame.K_SPACE:
+                player1.shot(player1)
 
+    # Update
+    all_sprites.update()
 
+    # Draw / render
+    screen.fill(BLACK)
+    player1.update()
+    player.update()
 
+    player.hurt(player1)
+    player1.hurt(player)
 
-    def move(self):
-        """Here game objects update their positions"""
-        self.tick()
-        self.pressed = pygame.key.get_pressed()
-        self.player.update(self)
-        self.bullet.update(self)
+    w1.stop(w1, player)
+    w2.stop(w2, player)
+    w3.stop(w3, player)
+    w1.stop(w1, player1)
+    w2.stop(w2, player1)
+    w3.stop(w3, player1)
+    w1.stop(player1, player)
+    w1.stop(player, player1)
+    all_sprites.draw(screen)
+    
+    # *after* drawing everything, flip the display
+    pygame.display.flip()
 
-    def render(self):
-        """Render the scene"""
-        self.screen.fill((0, 0, 0))
-        self.player.render(self)
-        self.player.shot(self)
-        #self.bullet.shot(self)
-       # self.ar[int(self.player.x/10.0),int(self.player.y/10.0)] = (200,200,200)
-       # self.ar[int(self.bullet.x1/10.0),int(self.bullet.y1/10.0)] = (200,200,200)
-        pygame.display.flip()
-
-    def exit(self):
-        """Exit the game"""
-        self._running = False
-
-    def cleanup(self):
-        """Cleanup the Game"""
-        pygame.quit()
-
-    def execute(self):
-        """Execution loop of the game"""
-        while(self._running):
-            # get all pygame events from queue
-            for event in pygame.event.get():
-                self.event_handler(event, game)
-            self.move()
-            self.render()
-
-        self.cleanup()
-
-if __name__ == "__main__":
-    game = Game()
-    game.execute()
+pygame.quit()
